@@ -1,2 +1,4 @@
 node_modules/
 .nvmrc
+database.sqlite3
+.vscode
