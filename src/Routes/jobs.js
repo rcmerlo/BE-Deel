@@ -50,9 +50,6 @@ router.post('/:job_id/pay', getProfile, async (req, res) => {
               model: Contract,
               where: {
                 ClientId: req.profile.id,
-                status: {
-                  [Sequelize.Op.ne]: 'terminated',
-                },
               },
             },
           ],
@@ -62,7 +59,7 @@ router.post('/:job_id/pay', getProfile, async (req, res) => {
       if (!job) return res.status(404).end()
 
       if (job.price > req.profile.balance)
-        return res.status(402).send('Client balance is not enough')
+        return res.status(403).send('Client balance is not enough')
 
       await Profile.update(
         { balance: Sequelize.literal(`balance + ${job.price}`) },
@@ -74,12 +71,6 @@ router.post('/:job_id/pay', getProfile, async (req, res) => {
         { where: { id: job.Contract.ClientId } },
         { transaction: t }
       )
-      await Contract.update(
-        { status: 'terminated' },
-        { where: { id: job.Contract.id } },
-        { transaction: t }
-      )
-
       await Job.update(
         { paid: true, paymentDate: new Date() },
         { where: { id: job_id }, returning: true },
