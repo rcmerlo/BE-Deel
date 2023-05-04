@@ -53,9 +53,13 @@ router.post('/deposit/:userId', getProfile, async (req, res) => {
         { transaction: t }
       )
 
-      const { totalPrice, 'Contract.Client.balance': clientBalance } = result.shift()
+      const { totalPrice, 'Contract.Client.balance': clientBalance } = result.shift() || {
+        totalPrice: 0,
+        'Contract.Client.balance': req.profile.balance,
+      }
 
-      if ((amount / totalPrice) * 100 > 25 || clientBalance < amount) return res.status(403).end()
+      if ((totalPrice > 0 && (amount / totalPrice) * 100 > 25) || clientBalance < amount)
+        return res.status(403).end()
 
       await Profile.update(
         { balance: Sequelize.literal(`balance + ${amount}`) },
